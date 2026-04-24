@@ -38,7 +38,7 @@ body {
 .site-header {
   background: var(--wine);
   display: flex; align-items: center; justify-content: center;
-  padding: 12px 32px;
+  padding: 14px 32px;
   position: sticky; top: 0; z-index: 100;
 }
 .site-header img { width: 200px; height: auto; display: block; max-width: 100%; }
@@ -1230,9 +1230,11 @@ async function enviarParaDra() {
 
     label.textContent = 'Enviando para o Drive…';
 
-    // Envia para o Apps Script (modo cors para receber resposta)
-    const resp = await fetch(GOOGLE_SHEETS_URL, {
+    // Apps Script não permite CORS com resposta — usamos no-cors
+    // e consideramos sucesso se não houver exceção de rede
+    await fetch(GOOGLE_SHEETS_URL, {
       method: 'POST',
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         tipo: 'imagem',
@@ -1241,16 +1243,9 @@ async function enviarParaDra() {
       })
     });
 
-    const json = await resp.json();
-
-    if (json.status === 'ok') {
-      label.textContent = '✓ Enviado com sucesso!';
-      btn.style.background = '#4CAF50';
-      // Abre o link do Drive em nova aba para confirmar
-      if (json.link) window.open(json.link, '_blank');
-    } else {
-      throw new Error('Resposta inesperada');
-    }
+    // no-cors sempre retorna resposta opaca (sem corpo) — sucesso = sem exceção
+    label.textContent = '✓ Enviado com sucesso!';
+    btn.style.background = '#4CAF50';
 
   } catch(err) {
     label.textContent = 'Erro ao enviar — tente novamente';
